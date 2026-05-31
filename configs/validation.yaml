@@ -1,0 +1,114 @@
+# =============================================================================
+# CoVR-R Validation Config
+# =============================================================================
+# Usage:
+#   python validate.py submit --config configs/validation.yaml
+#   python validate.py rerank-submission --config configs/validation.yaml \
+#       --input <recall.json> --output <reranked.json>
+
+val_json: "./val-set_no-labels.json"
+output_json: "./artifacts/val_submission.json"
+artifact_dir: "./artifacts"
+
+# --- Model paths (HuggingFace Hub or local) ---
+embedding_model_name: "Qwen/Qwen3-VL-Embedding-8B"
+reranker_model_name: "Qwen/Qwen3-VL-Reranker-8B"
+reasoning_model_name: "Qwen/Qwen3-VL-32B-Thinking"
+
+device: null
+attn_implementation: "sdpa"
+torch_dtype: "bfloat16"
+reranker_true_token_id: 9693
+reranker_false_token_id: 2152
+reranker_backend: "auto"
+reranker_device_map: null
+
+# --- Parallelism ---
+parallelism: "dp"
+gpu_ids: [0, 1, 2, 3, 4, 5, 6, 7]
+
+# --- Retrieval ---
+top_k: 50
+submission_top_k: 50
+embedding_batch_size: 1
+normalize_embeddings: true
+exclude_source: true
+keep_modification_text: false
+include_debug_artifacts: false
+
+# --- Reranking ---
+rerank_top_k: 50
+reranker_batch_size: 1
+reranker_predict_chunk_size: 20
+reranker_max_frames: 16
+fusion_embedding_weight: 0.4
+fusion_reranker_weight: 0.6
+
+# --- Video decode ---
+fps: 1.0
+max_frames: 128
+max_pixels: null
+video_decode_retries: 3
+video_decode_retry_sleep: 1.5
+
+# --- Reasoning (disabled for baseline) ---
+include_reasoning_trace: false
+reasoning_for_retrieval: false
+reasoning_for_rerank: false
+reasoning_enable_thinking: true
+reasoning_decode_skip_special_tokens: false
+reasoning_trace_part: "final"
+reasoning_tokens: 4096
+reasoning_prompt_style: "benchmark"
+reasoning_tag_mode: "none"
+reasoning_do_sample: false
+reasoning_temperature: 0.2
+reasoning_top_p: 0.9
+reasoning_top_k: 50
+reasoning_retrieval_mode: "gated_residual"
+reasoning_min_query_similarity: 0.5
+reasoning_fusion_weight: 0.5
+reasoning_candidate_pool_k: 0
+reasoning_rrf_k: 60.0
+
+# --- Templates ---
+query_template: "Reference video after edit instruction: {modification_text}"
+
+reasoning_query_template: >-
+  Reference video after edit instruction: {modification_text}
+  Reasoned target video description: {reasoning}
+reasoning_reranker_template: >-
+  {modification_text}
+
+  Reasoned target video description:
+  {reasoning}
+query_fusion: "max"
+
+embedding_instruction: >-
+  Retrieve the target video that matches the reference video after applying the edit instruction.
+  The correct target should satisfy the requested visual change while preserving unchanged visual context,
+  including objects, actions, state changes, scene, camera framing, and temporal progression.
+
+document_instruction: >-
+  Represent this candidate target video for composed video retrieval. Focus on visible objects, actions,
+  state changes, scene, camera framing, and temporal progression.
+
+reranker_instruction: >-
+  Score how well the candidate target video matches the reference video after applying the edit instruction.
+  A good candidate satisfies the requested visual change, preserves unchanged context, and remains temporally
+  and visually consistent with the intended edited result.
+
+# --- Datasets ---
+# IMPORTANT: Update video_dir and gallery_npz to your local paths
+datasets:
+  webvid:
+    video_dir: "/path/to/WebVid/8M/train"
+    gallery_npz: "./artifacts/webvid_gallery_qwen3vl_embedding.npz"
+    video_extension: ".mp4"
+    manifest_path: null
+
+  ss2:
+    video_dir: "/path/to/something_something_v2/mp4_videos"
+    gallery_npz: "./artifacts/ss2_gallery_qwen3vl_embedding.npz"
+    video_extension: ".mp4"
+    manifest_path: null
