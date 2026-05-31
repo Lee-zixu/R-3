@@ -26,8 +26,8 @@ CoVR-R-submission/
 ├── configs/
 │   ├── test_submission.yaml    # test set config
 │   └── validation.yaml         # validation set config
-├── test-set_no-labels.json     # test queries
-└── val-set_no-labels.json      # val queries
+├── test-set_no-labels.json     # test queries (download from official link first)
+└── val-set_no-labels.json      # val queries (download from official link first)
 ```
 
 ## Environment Setup
